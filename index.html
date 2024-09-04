@@ -5,22 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visualización de Ubicación</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-     crossorigin=""/>
-
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
     <style>
         #map {
             height: 100vh;
             width: 100%;
         }
     </style>
-
 </head>
 <body>
     <div id="map"></div>
 
-    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
     <script>
+        // Inicializa el mapa
         var map = L.map('map').setView([-41.133472, -71.310278], 13);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -30,16 +31,7 @@
 
         var marker;
 
-        // Obtener parámetros de URL para la latitud, longitud y tracking
-        function getLocationFromUrl() {
-            const params = new URLSearchParams(window.location.search);
-            const lat = parseFloat(params.get('lat'));
-            const lon = parseFloat(params.get('lon'));
-            const track = params.get('track') === 'true';
-            return { lat, lon, track };
-        }
-
-        // Actualizar la ubicación en el mapa
+        // Función para actualizar el mapa con la ubicación proporcionada
         function updateMap(lat, lon) {
             if (marker) {
                 marker.setLatLng([lat, lon]);
@@ -49,32 +41,52 @@
             map.setView([lat, lon], 13);
         }
 
-        // Configurar el mapa con la ubicación proporcionada y seguimiento en tiempo real si está activado
+        // Función para obtener la ubicación en tiempo real
+        function startTracking() {
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(
+                    function(position) {
+                        var lat = position.coords.latitude;
+                        var lon = position.coords.longitude;
+                        var accuracy = position.coords.accuracy;
+                        updateMap(lat, lon);
+
+                        // Añade un círculo que muestra la precisión de la ubicación
+                        L.circle([lat, lon], { radius: accuracy }).addTo(map);
+                    },
+                    function(error) {
+                        console.error('Error al obtener la ubicación:', error);
+                        alert('Error al obtener la ubicación.');
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 2000
+                    }
+                );
+            } else {
+                alert('Geolocalización no soportada por tu navegador.');
+            }
+        }
+
+        // Configurar el mapa con parámetros de URL
         function setupMap() {
-            const { lat, lon, track } = getLocationFromUrl();
+            const params = new URLSearchParams(window.location.search);
+            const lat = parseFloat(params.get('lat'));
+            const lon = parseFloat(params.get('lon'));
+            const track = params.get('track') === 'true';
 
             if (lat && lon) {
                 updateMap(lat, lon);
                 if (track) {
-                    // Si el seguimiento está activado, actualizar la ubicación cada 5 segundos
-                    setInterval(() => {
-                        fetch(`https://mapa.oscarsoft.me/location?lat=${lat}&lon=${lon}&track=true`)
-                            .then(response => response.json())
-                            .then(data => {
-                                updateMap(data.lat, data.lon);
-                            })
-                            .catch(error => console.error('Error al actualizar la ubicación:', error));
-                    }, 5000);
+                    startTracking(); // Inicia el seguimiento en tiempo real
                 }
             } else {
-                alert('No se proporcionaron coordenadas.');
+                startTracking(); // Inicia el seguimiento en tiempo real si no hay coordenadas en la URL
             }
         }
 
         setupMap();
     </script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""></script>
 </body>
 </html>
