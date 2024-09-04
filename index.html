@@ -30,6 +30,8 @@
         }).addTo(map);
 
         var marker;
+        var polyline = L.polyline([], { color: 'blue' }).addTo(map); // Línea para el recorrido
+        var latLngs = []; // Array para almacenar los puntos del recorrido
 
         // Función para actualizar el mapa con la ubicación proporcionada
         function updateMap(lat, lon) {
@@ -39,6 +41,10 @@
                 marker = L.marker([lat, lon]).addTo(map).bindPopup('Ubicación Actual').openPopup();
             }
             map.setView([lat, lon], 13);
+
+            // Agregar el punto actual al recorrido
+            latLngs.push([lat, lon]);
+            polyline.setLatLngs(latLngs);
         }
 
         // Función para obtener la ubicación en tiempo real
@@ -51,7 +57,7 @@
                         var accuracy = position.coords.accuracy;
                         updateMap(lat, lon);
 
-                        // Añade un círculo que muestra la precisión de la ubicación
+                        // Añadir un círculo que muestra la precisión de la ubicación
                         L.circle([lat, lon], { radius: accuracy }).addTo(map);
                     },
                     function(error) {
