@@ -80,10 +80,22 @@
             const params = new URLSearchParams(window.location.search);
             const lat = parseFloat(params.get('lat'));
             const lon = parseFloat(params.get('lon'));
+            const destLat = parseFloat(params.get('destLat'));
+            const destLon = parseFloat(params.get('destLon'));
             const track = params.get('track') === 'true';
 
             if (lat && lon) {
                 updateMap(lat, lon);
+
+                // Si hay destino, marcar y dibujar línea
+                if (destLat && destLon) {
+                    L.marker([destLat, destLon]).addTo(map).bindPopup('Destino').openPopup();
+                    L.polyline([[lat, lon], [destLat, destLon]], {
+                        color: 'green',
+                        weight: 4
+                    }).addTo(map);
+                }
+
                 if (track) {
                     startTracking(); // Inicia el seguimiento en tiempo real
                 }
